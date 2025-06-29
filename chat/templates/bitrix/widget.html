@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://api.bitrix24.com/api/v1/"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h3>Управление Нейропродавца</h3>
+  <button id="disableBtn">Отключить Нейропродавца</button>
+  <button id="enableBtn">Включить Нейропродавца</button>
+
+  <script>
+    // Получаем опции, вмонтированные Django
+    var placementOptions = {{ placement_options_json|safe }};
+    console.log("Placement options from server:", placementOptions);
+
+    var contactId = placementOptions.ID;
+    if (!contactId) {
+      document.body.insertAdjacentHTML('beforeend',
+        '<p style="color:red">Ошибка: не удалось определить ID контакта.</p>'
+      );
+      throw new Error("Contact ID is missing");
+    }
+
+    // Теперь безопасно привязываем кнопки
+    document.getElementById("disableBtn").onclick = function () {
+      console.log("Disabling GPT for", contactId);
+      fetch("https://your-app.example.com/chat/webhook/disable-gpt/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: contactId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Disable response:", data);
+        alert(data.message || "AI-продавец отключён");
+      })
+      .catch(err => {
+        console.error("Disable error:", err);
+        alert("Ошибка отключения AI-продавеца");
+      });
+    };
+
+    document.getElementById("enableBtn").onclick = function () {
+      console.log("Enabling GPT for", contactId);
+      fetch("https://your-app.example.com/chat/webhook/enable-gpt/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: contactId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Enable response:", data);
+        alert(data.message || "AI-продавец включён");
+      })
+      .catch(err => {
+        console.error("Enable error:", err);
+        alert("Ошибка включения AI-продавеца");
+      });
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script src="https://api.bitrix24.com/api/v1/"></script>
+ </head>
+<body>
+  <script>
+    BX24.install(function(){
+      // Отвязка старого
+      BX24.callMethod('placement.unbind', {
+        PLACEMENT: 'CRM_CONTACT_DETAIL_TAB'
+      }, function(){
+        // Привязка нового
+        BX24.callMethod('placement.bind', {
+          PLACEMENT: 'CRM_CONTACT_DETAIL_TAB',
+          HANDLER: 'https://your-app.example.com/chat/bitrix/widget/',
+          TITLE: 'Управлять GPT'
+        }, function(res){
+          console.log("PLACEMENT BIND:", res.data());
+          BX24.installFinish();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
