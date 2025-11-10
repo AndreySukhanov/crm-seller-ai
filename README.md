@@ -1,6 +1,6 @@
-# Нейропродавец Битрикс
+# Нейропродавец AMO CRM
 
-AI-powered продажный помощник с интеграцией в CRM системы (Bitrix24, AMO CRM).
+AI-powered продавец с интеграцией в CRM системы (Bitrix24, AMO CRM).
 
 ## Описание
 
@@ -26,7 +26,7 @@ AI-powered продажный помощник с интеграцией в CRM 
 - **Backend**: Django 5.2, PostgreSQL, Redis
 - **AI**: OpenAI GPT-4, FAISS для векторного поиска
 - **Очереди**: Celery для фоновых задач
-- **CRM**: Bitrix24 REST API, подготовка для AMO CRM
+- **CRM**: Bitrix24 REST API, AMO CRM
 - **Контейнеризация**: Docker Compose
 
 ## Быстрый старт
