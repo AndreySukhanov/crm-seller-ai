@@ -1,11 +1,9 @@
 import json
 import openai
 from datetime import datetime
-from django.utils import timezone
-
 from chat.models import Chat
 from chat.services.build_history import build_messages
-from chat.services.documents import load_index, retrieve
+from chat.services.documents import load_index
 from chat.services.funcs import get_company_funcs, call_gpt_func
 from chat.services.settings import CHAT_MODEL
 from conf import settings
@@ -157,14 +155,14 @@ def ask_gpt(index, docs, query: str, chat: Chat, lead_id: int, company: Company,
                     crm.move_lead_in_funnel(id_lead=lead_id, new_status=json_msg["stage"])
                     logger.info(f"Лид передвинут в воронку {json_msg['stage']}")
 
-            answer = json_msg.get("message").replace('\\n', '\n')
+            answer = (json_msg.get("message") or "").replace('\\n', '\n')
             chat.add("user", query)
             chat.add("assistant", answer)
             logger.info(f"Ответ GPT после вызова функции: {json_msg}")
             return answer
 
         # Обычный ответ без вызова функции
-        answer = json_msg.get("message").replace('\\n', '\n')
+        answer = (json_msg.get("message") or "").replace('\\n', '\n')
         chat.add("user", query)
         chat.add("assistant", answer)
         logger.info(f"Ответ GPT без функции: {answer}")

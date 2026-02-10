@@ -1,17 +1,18 @@
 import logging
-from datetime import timedelta, datetime
-from django.utils import timezone
-from django.db.models import F, ExpressionWrapper, DateTimeField
-from django.db.models.functions import Now
+from datetime import datetime, timedelta
+
 from celery import shared_task
+from django.db.models import DateTimeField, ExpressionWrapper, F
+from django.db.models.functions import Now
+from django.utils import timezone
 
-from crm.services.bitrix import get_lead_by_id, get_contact
-from users.models import User
 from chat.models import Message
-from chat.services.documents import load_index
 from chat.services.base import ask_gpt
+from chat.services.documents import load_index
+from crm.services.bitrix import get_contact, get_lead_by_id
 from crm.services.bitrix.chat_methods import send_message_to_chat
-
+from crm.services.request_data_handler import get_crm
+from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +21,8 @@ logger = logging.getLogger(__name__)
 def check_for_sleep_lead():
     """
     Проходит по всем юзерам и проверяет не вышло ли время сна.
-    Если вышло, то отправялем сообщение для согрева
+    Если вышло, то отправляем сообщение для согрева.
     """
-    now = timezone.now()
-
     users_to_wake = (
         User.objects.select_related("company")
         .annotate(
@@ -40,26 +39,28 @@ def check_for_sleep_lead():
     )
 
     for user in users_to_wake:
-        logger.info(f"---Происходит возвращение лида {user.username}---")
+        logger.info("---Возвращение лида %s---", user.username)
 
-        # Проверка лимита сообщений
         now = datetime.now()
         today_messages = Message.objects.filter(
             user_id=user.pk,
             role="assistant",
-            updated_at__date=now.date(),
+            created_at__date=now.date(),
         ).count()
 
         if today_messages >= user.company.daily_limit:
-            logger.info(f"Дневной литим сообщений {user.username!r} для исчерпан.")
-            return None  # лимит исчерпан
+            logger.info("Дневной лимит сообщений для %r исчерпан.", user.username)
+            continue
 
         company = user.company
         index, all_docs = load_index(company)
         chat = user.chats.first()
         lead = user.leads.first()
 
-        # Промт для возвращения лида
+        if not chat or not lead:
+            logger.warning("Пропуск пользователя %s: нет chat или lead", user.username)
+            continue
+
         prompt = (
             "Ты помощник менеджера по работе с клиентами.\n"
             "Твоя задача — составить короткое, дружелюбное сообщение для клиента, который давно не выходил на связь.\n\n"
@@ -77,7 +78,6 @@ def check_for_sleep_lead():
             "Составь короткое сообщение для клиента, который давно не выходил на связь.\n"
         )
 
-        # Вызываем функцию работы chat gpt
         answer_gpt = ask_gpt(
             index=index,
             docs=all_docs,
@@ -85,12 +85,12 @@ def check_for_sleep_lead():
             chat=chat,
             lead_id=lead.lead_id,
             company=company,
-            crm=company.crm_name,
+            crm=get_crm(company),
         )
+
         crm_lead = get_lead_by_id(company.webhook, lead.lead_id)
         contact = get_contact(company.webhook, crm_lead.get("CONTACT_ID"))
-        # Отправка сообщения в чат
-        logger.info(f"contact: {contact}")
+
         send_message_to_chat(
             crm_entity=lead.lead_id if not contact else contact["ID"],
             chat_id=lead.dialog_id,
@@ -100,6 +100,6 @@ def check_for_sleep_lead():
             crm_entity_type="lead" if not contact else "contact",
         )
 
-        user.last_activity = now
-
-        logger.info(f"GPT написал пользователю {user.username}. Ответ: {answer_gpt}")
+        user.last_activity = timezone.now()
+        user.save(update_fields=["last_activity"])
+        logger.info("GPT написал пользователю %s. Ответ: %s", user.username, answer_gpt)
