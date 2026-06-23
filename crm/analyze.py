@@ -4,13 +4,17 @@
 Затем вся инфа выводится в админку
 """
 
+import logging
+
 from openai import OpenAI
 
 from django.conf import settings
 
+logger = logging.getLogger(__name__)
+
 client = OpenAI(
     api_key=settings.OPENAI_API_KEY,
-    base_url=settings.OPENAI_BASE_URL,
+    base_url=settings.OPENAI_BASE_URL or None,
 )
 
 
