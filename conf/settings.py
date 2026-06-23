@@ -164,10 +164,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 DEEP_SEEK_API_KEY = os.getenv("DEEP_SEEK_API_KEY", "")
-OPENAI_BASE_URL = "https://api.example.com/openai/v1"
-# BITRIX_WEBHOOK_URL = "https://b24-xxxxxx.bitrix24.ru/rest/1/REDACTED"
-# BITRIX_WEBHOOK_URL = "https://b24-xxxxxx.bitrix24.ru/rest/1/REDACTED/"
-# BITRIX_WEBHOOK_URL = "https://b24-xxxxxx.bitrix24.ru/rest/1/REDACTED/"
+# Optional OpenAI-compatible base URL (e.g. a proxy or self-hosted gateway).
+# Leave empty to hit api.openai.com directly.
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "")
+
 AUTH_USER_MODEL = 'users.User'
 
 
