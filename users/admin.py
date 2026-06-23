@@ -132,7 +132,7 @@ class CompanyAdmin(admin.ModelAdmin):
                     "promt",
                     "webhook",
                     "use_realty_api",
-                    "api_key_realty_api",
+                    "api_key_realty",
                     "off_gpt_on_stage"
                 )
             },
