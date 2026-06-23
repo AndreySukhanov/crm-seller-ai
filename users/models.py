@@ -43,18 +43,18 @@ class Company(models.Model):
         blank=True,
     )
 
-    use_realty_api = models.BooleanField(default=False, verbose_name="RealtyAPI")
-    api_key_realty_api = models.CharField(
+    use_realty_api = models.BooleanField(default=False, verbose_name="Интеграция с сервисом недвижимости")
+    api_key_realty = models.CharField(
         max_length=255,
         null=True,
         blank=True,
-        verbose_name="Ключ апи для отрпавки в запросов в RealtyAPI",
+        verbose_name="API-ключ для отправки запросов в сервис недвижимости",
     )
 
     def clean(self) -> None:
         super().clean()
-        if self.use_realty_api and not self.api_key_realty_api:
-            raise ValidationError({"api_key_realty_api": "Это поле обязательно, если используется RealtyAPI."})
+        if self.use_realty_api and not self.api_key_realty:
+            raise ValidationError({"api_key_realty": "Это поле обязательно, если включена интеграция с сервисом недвижимости."})
 
 
 class OutgoingConfig(models.Model):

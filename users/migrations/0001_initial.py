@@ -36,8 +36,8 @@ class Migration(migrations.Migration):
                 ('daily_limit', models.IntegerField(default=1, null=True, verbose_name='Дневной лимит для сообщений помощника при возврате лида')),
                 ('sleep_days', models.IntegerField(default=30, null=True, verbose_name='Лимит в днях для активации спящих лидов')),
                 ('stat_code', models.URLField(blank=True, default=users.models.generate_unique_code)),
-                ('use_realty_api', models.BooleanField(default=False, verbose_name='RealtyAPI')),
-                ('api_key_realty_api', models.CharField(blank=True, max_length=255, null=True, verbose_name='Ключ апи для отрпавки в запросов в RealtyAPI')),
+                ('use_realty_api', models.BooleanField(default=False, verbose_name='Интеграция с сервисом недвижимости')),
+                ('api_key_realty', models.CharField(blank=True, max_length=255, null=True, verbose_name='API-ключ для отправки запросов в сервис недвижимости')),
             ],
         ),
         migrations.CreateModel(

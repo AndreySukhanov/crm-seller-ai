@@ -9,7 +9,7 @@ from chat.services import chat_with_gpt
 from .services import bitrix
 from .services.outgoing import outgoing
 from .services.request_data_handler import RequestDataHandler, get_company, get_crm
-from .services.realty_api.realty_api_integration import RealtyAPIAPI
+from .services.realty_api.realty_integration import RealtyAPI
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +46,10 @@ class WebhookView(APIView):
                     crm_entity_type=rdh.crm_entity_type
                 )
 
-                # Для клиентов с RealtyAPI
+                # Для клиентов, у которых включена интеграция с сервисом недвижимости
                 if rdh.company.use_realty_api:
-                    api_realty_api = RealtyAPIAPI(appkey=rdh.company.api_key_realty_api)
-                    api_realty_api.create_realty(
+                    realty_api = RealtyAPI(appkey=rdh.company.api_key_realty)
+                    realty_api.create_realty(
                         owner_fio=rdh.user.last_name,
                         owner_phone=rdh.user.phone,
                         action=1,
