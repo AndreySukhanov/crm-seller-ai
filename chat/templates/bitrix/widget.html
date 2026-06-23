@@ -9,13 +9,13 @@
   </style>
 </head>
 <body>
-  <h3>Управление Нейропродавца</h3>
-  <button id="disableBtn">Отключить Нейропродавца</button>
-  <button id="enableBtn">Включить Нейропродавца</button>
+  <h3>Управление AI-продавцом</h3>
+  <button id="disableBtn">Отключить AI-продавца</button>
+  <button id="enableBtn">Включить AI-продавца</button>
 
   <script>
-    // Получаем опции, вмонтированные Django
     var placementOptions = {{ placement_options_json|safe }};
+    var appBaseUrl = "{{ app_base_url|escapejs }}";
     console.log("Placement options from server:", placementOptions);
 
     var contactId = placementOptions.ID;
@@ -26,41 +26,29 @@
       throw new Error("Contact ID is missing");
     }
 
-    // Теперь безопасно привязываем кнопки
-    document.getElementById("disableBtn").onclick = function () {
-      console.log("Disabling GPT for", contactId);
-      fetch("https://your-app.example.com/chat/webhook/disable-gpt/", {
+    function callWebhook(endpoint, onSuccessMessage, onErrorMessage) {
+      fetch(appBaseUrl + endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: contactId })
       })
       .then(res => res.json())
       .then(data => {
-        console.log("Disable response:", data);
-        alert(data.message || "AI-продавец отключён");
+        console.log("Response:", data);
+        alert(data.message || onSuccessMessage);
       })
       .catch(err => {
-        console.error("Disable error:", err);
-        alert("Ошибка отключения AI-продавеца");
+        console.error("Error:", err);
+        alert(onErrorMessage);
       });
+    }
+
+    document.getElementById("disableBtn").onclick = function () {
+      callWebhook("/chat/webhook/disable-gpt/", "AI-продавец отключён", "Ошибка отключения AI-продавца");
     };
 
     document.getElementById("enableBtn").onclick = function () {
-      console.log("Enabling GPT for", contactId);
-      fetch("https://your-app.example.com/chat/webhook/enable-gpt/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: contactId })
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log("Enable response:", data);
-        alert(data.message || "AI-продавец включён");
-      })
-      .catch(err => {
-        console.error("Enable error:", err);
-        alert("Ошибка включения AI-продавеца");
-      });
+      callWebhook("/chat/webhook/enable-gpt/", "AI-продавец включён", "Ошибка включения AI-продавца");
     };
   </script>
 </body>
