@@ -17,11 +17,9 @@ from users.models import Company
 import logging
 
 logger = logging.getLogger(__name__)
-openai.api_key = settings.OPENAI_API_KEY  # <-- сюда вставьте свой ключ OpenAI
-openai.base_url = "https://api.example.com/openai/v1/"
-
-EMBEDDINGS_URL = ""
-EMBEDDINGS_KEY = settings.OPENAI_API_KEY  # Тот же ключ, что и для openai.api_key
+openai.api_key = settings.OPENAI_API_KEY
+if settings.OPENAI_BASE_URL:
+    openai.base_url = settings.OPENAI_BASE_URL
 
 
 class GPT:
