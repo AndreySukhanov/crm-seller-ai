@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -67,7 +68,9 @@ class EnableGptView(APIView):
 
 @csrf_exempt
 def bitrix_install_view(request):
-    return render(request, 'bitrix/install.html')
+    return render(request, 'bitrix/install.html', {
+        'app_base_url': os.getenv('APP_BASE_URL', ''),
+    })
 
 @csrf_exempt
 def bitrix_widget_view(request):
@@ -90,6 +93,7 @@ def bitrix_widget_view(request):
     placement_options_json = json.dumps(placement_options)
 
     return render(request, 'bitrix/widget.html', {
-        'placement_options_json': placement_options_json
+        'placement_options_json': placement_options_json,
+        'app_base_url': os.getenv('APP_BASE_URL', ''),
     })
 

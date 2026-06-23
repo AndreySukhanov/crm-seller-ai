@@ -6,15 +6,14 @@
  </head>
 <body>
   <script>
+    var appBaseUrl = "{{ app_base_url|escapejs }}";
     BX24.install(function(){
-      // Отвязка старого
       BX24.callMethod('placement.unbind', {
         PLACEMENT: 'CRM_CONTACT_DETAIL_TAB'
       }, function(){
-        // Привязка нового
         BX24.callMethod('placement.bind', {
           PLACEMENT: 'CRM_CONTACT_DETAIL_TAB',
-          HANDLER: 'https://your-app.example.com/chat/bitrix/widget/',
+          HANDLER: appBaseUrl + '/chat/bitrix/widget/',
           TITLE: 'Управлять GPT'
         }, function(res){
           console.log("PLACEMENT BIND:", res.data());
