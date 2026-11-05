@@ -9,19 +9,21 @@
 [![FAISS](https://img.shields.io/badge/RAG-FAISS-005571)](https://github.com/facebookresearch/faiss)
 [![License: Source-Available](https://img.shields.io/badge/license-Source--Available-orange)](LICENSE)
 
-**AI-продавец для Bitrix24 и AMO CRM.** GPT ведёт диалоги с клиентами прямо в чате CRM, классифицирует лидов, двигает их по воронке, назначает встречи и возвращает «спящих» — всё внутри одной системы.
+**English** | [Русский](README.ru.md)
 
-> Полный pipeline: webhook от CRM → классификация лида GPT → ответ через RAG по базе знаний компании → автодействия (создать встречу, перевести стадию, дернуть внешний сервис). 5+ компаний, разные CRM, разные домены — одна система.
+**AI sales agent for Bitrix24 and amoCRM.** GPT talks to customers directly in the CRM chat, classifies leads, moves them through the sales pipeline, books meetings and re-engages dormant leads - all inside one system.
+
+> Full pipeline: CRM webhook → GPT lead classification → answer via RAG over the company knowledge base → automatic actions (book a meeting, change the stage, call an external service). 5+ companies, different CRMs, different domains - one system.
 
 ---
 
-## Что внутри
+## What's inside
 
-Большинство «GPT-продавцов» делают одно из двух:
-1. Отвечают шаблонами по ключевым словам — клиент быстро понимает, что говорит с ботом.
-2. Делают «GPT-обёртку» без памяти, без знаний компании, без действий — пишет тексты, но ничего не делает с лидом в CRM.
+Most "GPT sales bots" do one of two things:
+1. Reply with keyword-matched templates - the customer quickly realizes they are talking to a bot.
+2. Wrap GPT with no memory, no company knowledge and no actions - it writes text but does nothing with the lead in the CRM.
 
-**Seller AI делает иначе.** Бот вшит в CRM как полноценный участник: видит весь контекст лида (история переписки, стадия воронки, поля контакта), отвечает на основе базы знаний клиента через RAG, и сам совершает действия — создаёт встречу, двигает по этапам, дёргает интеграции.
+**Seller AI takes a different approach.** The bot is embedded in the CRM as a full participant: it sees the whole lead context (conversation history, pipeline stage, contact fields), answers from the client's knowledge base via RAG, and takes actions itself - books meetings, moves the lead through stages, calls integrations.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -31,16 +33,16 @@
 │   CRM event ──► webhook ──► RequestDataHandler                              │
 │                                       │                                     │
 │                                       ▼                                     │
-│                          определить компанию + лида                         │
-│                          по auth_domain / client_id                         │
+│                          resolve company + lead                             │
+│                          by auth_domain / client_id                         │
 │                                       │                                     │
 │                                       ▼                                     │
-│                          собрать историю диалога                            │
+│                          build conversation history                         │
 │                          (build_history → max_history_length)               │
 │                                       │                                     │
 │                                       ▼                                     │
-│                          FAISS retrieve — найти                             │
-│                          релевантные куски базы знаний                      │
+│                          FAISS retrieve - find                              │
+│                          relevant knowledge base chunks                     │
 │                                       │                                     │
 │                                       ▼                                     │
 │                          GPT + function calling                             │
@@ -49,73 +51,73 @@
 │                                       │                                     │
 │                       ┌───────────────┼───────────────┐                     │
 │                       ▼               ▼               ▼                     │
-│              отправить ответ    выполнить функцию   обновить стадию         │
-│              в чат CRM          (Celery task)       лида в воронке          │
+│              send reply to      run a function    update the lead           │
+│              the CRM chat       (Celery task)     pipeline stage            │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Параллельно работает Celery beat «будильник» — раз в сутки сканирует лидов, у которых нет активности `sleep_days`, и инициирует возврат через настроенный шаблон.
+In parallel, a Celery beat "alarm clock" scans leads once a day for those with no activity for `sleep_days` and starts a re-engagement message from a configured template.
 
 ---
 
-## Возможности
+## Features
 
-- **GPT в чате CRM** — отвечает клиентам прямо в Bitrix24 OpenLines или AMO Chats. Понимает контекст всей истории диалога.
-- **Сегментация лидов** — автоматическая классификация A/B/C + статус (Новый, Горячий, Тёплый, Холодный, Купил, Не купил) по результату анализа диалога.
-- **RAG поверх базы знаний** — FAISS-индекс с документами компании. GPT отвечает на основе их содержимого, не выдумывает.
-- **Function calling** — GPT сам решает, когда вызвать `create_meeting`, `change_funnel_stage`, `notify_manager` и др. Функции настраиваются на стороне админки для каждой компании.
-- **«Будильник» для спящих лидов** — Celery beat возвращает в диалог тех, у кого не было активности N дней. Дневной лимит, чтобы не флудить.
-- **Виджет в Bitrix24** — кнопки «Включить/Выключить GPT для контакта» прямо в карточке лида.
-- **Multi-tenant** — одна установка обслуживает несколько компаний. У каждой свой webhook, своя база знаний, свои функции, свои промпты, свой часовой пояс.
-- **Подключаемые CRM** — Bitrix24 (REST + OpenLines + Placement) и AMO CRM (OAuth + Chats API). Новые CRM добавляются через `crm.services.crm_abs.CRM`.
-- **Опциональные внешние интеграции** — пример: `crm/services/realty_api/` — вендор-независимый клиент партнёрской API недвижимости, конфигурируется через env.
+- **GPT in the CRM chat** - replies to customers directly in Bitrix24 Open Lines or amoCRM Chats, with the full conversation history as context.
+- **Lead segmentation** - automatic A/B/C classification plus a status (New, Hot, Warm, Cold, Bought, Did not buy) based on conversation analysis.
+- **RAG over the knowledge base** - a FAISS index of the company's documents. GPT answers from their content instead of making things up.
+- **Function calling** - GPT decides when to call `create_meeting`, `change_funnel_stage`, `notify_manager` and others. Functions are configured per company in the admin panel.
+- **Dormant lead "alarm clock"** - Celery beat brings back leads with no activity for N days. A daily limit prevents flooding.
+- **Bitrix24 widget** - "Enable/Disable GPT for this contact" buttons right in the lead card.
+- **Multi-tenant** - one installation serves several companies. Each has its own webhook, knowledge base, functions, prompts and time zone.
+- **Pluggable CRMs** - Bitrix24 (REST + Open Lines + Placement) and amoCRM (OAuth + Chats API). New CRMs are added via `crm.services.crm_abs.CRM`.
+- **Optional external integrations** - example: `crm/services/realty_api/`, a vendor-neutral client for a partner real-estate API, configured via env.
 
 ---
 
-## Стек
+## Stack
 
-| Слой | Технологии |
+| Layer | Technologies |
 |---|---|
 | Backend | Django 5.2, Django REST Framework, Python 3.12 |
 | AI / LLM | OpenAI GPT (function calling), tiktoken, langchain |
 | RAG | FAISS, OpenAI embeddings, langchain-community |
-| Очереди | Celery + django-celery-beat + Redis |
-| БД | PostgreSQL |
-| CRM SDKs | Bitrix24 REST API, AMO CRM v4 |
-| Деплой | Docker Compose, Gunicorn, Nginx |
+| Queues | Celery + django-celery-beat + Redis |
+| DB | PostgreSQL |
+| CRM SDKs | Bitrix24 REST API, amoCRM v4 |
+| Deployment | Docker Compose, Gunicorn, Nginx |
 
 ---
 
-## Структура проекта
+## Project structure
 
 ```
-chat/                        Модуль диалогов и GPT
+chat/                        Conversations and GPT
   models.py                  Chat, Message, Func, Property
   services/
-    base.py                  GPT-обёртка, основной pipeline ответа
-    build_history.py         Сборка истории диалога с учётом лимита
-    documents.py             RAG: FAISS-индекс + retrieve
-    funcs.py                 Function calling: регистрация и вызов
-    settings.py              Модель/параметры GPT
-  tasks.py                   Celery: возврат спящих лидов
-  templates/bitrix/          install.html + widget.html для встройки в Bitrix
+    base.py                  GPT wrapper, main reply pipeline
+    build_history.py         Conversation history within the length limit
+    documents.py             RAG: FAISS index + retrieve
+    funcs.py                 Function calling: registration and dispatch
+    settings.py              GPT model and parameters
+  tasks.py                   Celery: dormant lead re-engagement
+  templates/bitrix/          install.html + widget.html for the Bitrix24 embed
 crm/
-  models.py                  Lead с сегментацией
-  views.py                   WebhookView — основная точка входа из CRM
-  analyze.py                 GPT-классификация лидов A/B/C
+  models.py                  Lead with segmentation
+  views.py                   WebhookView - main entry point from the CRM
+  analyze.py                 GPT lead classification A/B/C
   services/
-    crm_abs.py               Абстрактный класс CRM-интеграции
-    request_data_handler.py  Парсинг входящих webhook
-    bitrix/                  Реализация для Bitrix24
-    amo/                     Реализация для AMO CRM
-    lead/                    Custom fields, доменные операции с лидом
-    outgoing.py              Исходящие сообщения и реакции на стадии
-    realty_api/              Опц. партнёрская API недвижимости
+    crm_abs.py               Abstract CRM integration class
+    request_data_handler.py  Incoming webhook parsing
+    bitrix/                  Bitrix24 implementation
+    amo/                     amoCRM implementation
+    lead/                    Custom fields, lead domain operations
+    outgoing.py              Outgoing messages and stage reactions
+    realty_api/              Optional partner real-estate API
 users/
   models.py                  Company, User, AMOConfig, FunnelStep
-  admin.py                   Кастомная админка
-  templates/stats/           Статистика по компаниям
+  admin.py                   Custom admin
+  templates/stats/           Per-company statistics
 conf/                        Django settings, Celery, middleware
 ```
 
@@ -123,25 +125,25 @@ conf/                        Django settings, Celery, middleware
 
 ## API
 
-| Метод | Путь | Назначение |
+| Method | Path | Purpose |
 |---|---|---|
-| `POST` | `/webhook/`                          | Основной webhook от CRM (lead/message events) |
-| `POST` | `/chat/webhook/enable-gpt/`          | Включить GPT для конкретного контакта |
-| `POST` | `/chat/webhook/disable-gpt/`         | Выключить GPT для конкретного контакта |
-| `POST` | `/chat/bitrix/install/`              | Установка приложения в Bitrix24 (placement.bind) |
-| `POST` | `/chat/bitrix/widget/`               | Виджет управления GPT в карточке контакта |
-| `GET`  | `/company/stats`                     | Сводная статистика компании |
+| `POST` | `/webhook/`                          | Main CRM webhook (lead/message events) |
+| `POST` | `/chat/webhook/enable-gpt/`          | Enable GPT for a specific contact |
+| `POST` | `/chat/webhook/disable-gpt/`         | Disable GPT for a specific contact |
+| `POST` | `/chat/bitrix/install/`              | Install the app in Bitrix24 (placement.bind) |
+| `POST` | `/chat/bitrix/widget/`               | GPT control widget in the contact card |
+| `GET`  | `/company/stats`                     | Company summary statistics |
 
-Подробнее — в `chat/urls.py`, `crm/urls.py`, `users/urls.py`.
+See `chat/urls.py`, `crm/urls.py`, `users/urls.py` for details.
 
 ---
 
-## Быстрый старт
+## Quick start
 
 ```bash
-git clone https://github.com/AndreySukhanov/seller-ai.git
-cd seller-ai
-cp .env.example .env  # заполнить SECRET_KEY, OPENAI_API_KEY, POSTGRES_*, REDIS_*
+git clone https://github.com/AndreySukhanov/crm-seller-ai.git
+cd crm-seller-ai
+cp .env.example .env  # fill in SECRET_KEY, OPENAI_API_KEY, POSTGRES_*, REDIS_*
 
 docker-compose up -d            # PostgreSQL + Redis
 python -m venv venv && source venv/bin/activate
@@ -151,49 +153,49 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 
-# В отдельных терминалах:
+# In separate terminals:
 celery -A conf worker -l info
 celery -A conf beat -l info
 ```
 
-Открыть `http://localhost:8000/admin/`, завести компанию (домен Bitrix24, webhook, промпт), залить документы базы знаний.
+Open `http://localhost:8000/admin/`, create a company (Bitrix24 domain, webhook, prompt) and upload the knowledge base documents.
 
 ---
 
-## Конфигурация
+## Configuration
 
-Ключевые переменные окружения:
+Key environment variables:
 
-| Env | Значение | Назначение |
+| Env | Value | Purpose |
 |---|---|---|
-| `SECRET_KEY`           | Django secret               | Криптография сессий и подписи |
-| `DEBUG`                | `False` в проде             | Режим отладки |
-| `ALLOWED_HOSTS`        | `yourdomain.com,…`          | Хосты, на которые отвечает Django |
-| `OPENAI_API_KEY`       | `sk-…`                      | Ключ OpenAI |
-| `OPENAI_BASE_URL`      | URL прокси (опц.)           | Альтернативный base_url для OpenAI-совместимого шлюза. Пусто — обращаемся к api.openai.com напрямую |
-| `DEEP_SEEK_API_KEY`    | (опц.)                      | DeepSeek как fallback |
-| `POSTGRES_*`           | DB настройки                | engine/db/user/password/host/port |
-| `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` | | Backend для Celery |
-| `APP_BASE_URL`         | `https://your.app.com`      | Внешний URL приложения (нужен Bitrix iframe-виджету) |
-| `REALTY_API_BASE_URL`  | URL партнёра (опц.)         | Если включена интеграция с сервисом недвижимости |
+| `SECRET_KEY`           | Django secret               | Session and signing cryptography |
+| `DEBUG`                | `False` in production       | Debug mode |
+| `ALLOWED_HOSTS`        | `yourdomain.com,…`          | Hosts Django responds to |
+| `OPENAI_API_KEY`       | `sk-…`                      | OpenAI key |
+| `OPENAI_BASE_URL`      | proxy URL (optional)        | Alternative base_url for an OpenAI-compatible gateway. Empty - call api.openai.com directly |
+| `DEEP_SEEK_API_KEY`    | (optional)                  | DeepSeek as a fallback |
+| `POSTGRES_*`           | DB settings                 | engine/db/user/password/host/port |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` | | Celery backend |
+| `APP_BASE_URL`         | `https://your.app.com`      | Public app URL (required by the Bitrix24 iframe widget) |
+| `REALTY_API_BASE_URL`  | partner URL (optional)      | If the real-estate service integration is enabled |
 
 ---
 
-## Добавление новой CRM
+## Adding a new CRM
 
-1. Наследуйтесь от `crm.services.crm_abs.CRM`.
-2. Реализуйте абстрактные методы: `send_message_to_chat`, `change_funnel_stage`, `create_meeting`, …
-3. Зарегистрируйте в `crm.services.request_data_handler.get_crm()`.
-4. Добавьте парсинг входящего webhook в `RequestDataHandler`.
-
----
-
-## Деплой
-
-Подробнее — `DEPLOYMENT.md` (Gunicorn + Nginx + systemd, бэкапы PostgreSQL, certbot, мониторинг Celery).
+1. Subclass `crm.services.crm_abs.CRM`.
+2. Implement the abstract methods: `send_message_to_chat`, `change_funnel_stage`, `create_meeting`, …
+3. Register it in `crm.services.request_data_handler.get_crm()`.
+4. Add incoming webhook parsing to `RequestDataHandler`.
 
 ---
 
-## Лицензия
+## Deployment
 
-[Source-Available](LICENSE). Читать, изучать, учиться — да; использовать в продуктах/сервисах без письменного разрешения — нет. По вопросам лицензирования: `avsukhanov21@gmail.com`.
+See `DEPLOYMENT.md` (Gunicorn + Nginx + systemd, PostgreSQL backups, certbot, Celery monitoring; in Russian).
+
+---
+
+## License
+
+[Source-Available](LICENSE). Reading, studying and learning from the code - yes; using it in products or services without written permission - no. Licensing questions: `avsukhanov21@gmail.com`.
