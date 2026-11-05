@@ -192,7 +192,7 @@ Key environment variables:
 
 ## Deployment
 
-See `DEPLOYMENT.md` (Gunicorn + Nginx + systemd, PostgreSQL backups, certbot, Celery monitoring; in Russian).
+See [`DEPLOYMENT.md`](DEPLOYMENT.md) (Gunicorn + Nginx + systemd, PostgreSQL backups, certbot, Celery monitoring).
 
 ---
 

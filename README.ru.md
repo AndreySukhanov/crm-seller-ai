@@ -192,7 +192,7 @@ celery -A conf beat -l info
 
 ## Деплой
 
-Подробнее — `DEPLOYMENT.md` (Gunicorn + Nginx + systemd, бэкапы PostgreSQL, certbot, мониторинг Celery).
+Подробнее — [`DEPLOYMENT.ru.md`](DEPLOYMENT.ru.md) (Gunicorn + Nginx + systemd, бэкапы PostgreSQL, certbot, мониторинг Celery).
 
 ---
 

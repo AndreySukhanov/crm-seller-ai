@@ -1,8 +1,10 @@
-# Инструкция по развертыванию
+# Deployment guide
 
-## Подготовка сервера
+**English** | [Русский](DEPLOYMENT.ru.md)
 
-### 1. Установка системных зависимостей
+## Server preparation
+
+### 1. Install system dependencies
 
 ```bash
 # Ubuntu/Debian
@@ -13,7 +15,7 @@ sudo apt install python3 python3-pip python3-venv nginx postgresql postgresql-co
 sudo yum install python3 python3-pip nginx postgresql postgresql-server redis
 ```
 
-### 2. Настройка PostgreSQL
+### 2. Configure PostgreSQL
 
 ```bash
 sudo -u postgres psql
@@ -23,16 +25,16 @@ GRANT ALL PRIVILEGES ON DATABASE seller-ai TO sellerai_user;
 \q
 ```
 
-### 3. Настройка Redis
+### 3. Configure Redis
 
 ```bash
 sudo systemctl enable redis
 sudo systemctl start redis
 ```
 
-## Развертывание приложения
+## Application deployment
 
-### 1. Клонирование и настройка
+### 1. Clone and set up
 
 ```bash
 cd /var/www/
@@ -43,14 +45,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Настройка окружения
+### 2. Configure the environment
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-Заполните переменные:
+Fill in the variables:
 ```env
 SECRET_KEY=generate-secure-key-here
 DEBUG=False
@@ -62,7 +64,7 @@ POSTGRES_HOST=localhost
 OPENAI_API_KEY=your_openai_key
 ```
 
-### 3. Применение миграций
+### 3. Apply migrations
 
 ```bash
 python manage.py migrate
@@ -70,16 +72,16 @@ python manage.py collectstatic --noinput
 python manage.py createsuperuser
 ```
 
-### 4. Настройка Gunicorn
+### 4. Configure Gunicorn
 
 ```bash
 pip install gunicorn
 
-# Тест запуска
+# Test run
 gunicorn conf.wsgi:application --bind 0.0.0.0:8000
 ```
 
-Создайте systemd service `/etc/systemd/system/seller-ai.service`:
+Create the systemd service `/etc/systemd/system/seller-ai.service`:
 
 ```ini
 [Unit]
@@ -97,9 +99,9 @@ ExecStart=/var/www/seller-ai/seller-ai/venv/bin/gunicorn --workers 3 --bind unix
 WantedBy=multi-user.target
 ```
 
-### 5. Настройка Nginx
+### 5. Configure Nginx
 
-Создайте `/etc/nginx/sites-available/seller-ai`:
+Create `/etc/nginx/sites-available/seller-ai`:
 
 ```nginx
 server {
@@ -123,7 +125,7 @@ server {
 }
 ```
 
-Активируйте конфигурацию:
+Enable the configuration:
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/seller-ai /etc/nginx/sites-enabled
@@ -131,9 +133,9 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### 6. Запуск Celery
+### 6. Run Celery
 
-Создайте systemd service `/etc/systemd/system/seller-ai-celery.service`:
+Create the systemd service `/etc/systemd/system/seller-ai-celery.service`:
 
 ```ini
 [Unit]
@@ -159,14 +161,14 @@ ExecReload=/var/www/seller-ai/seller-ai/venv/bin/celery multi restart worker1 \
 WantedBy=multi-user.target
 ```
 
-Создайте директории для логов:
+Create the log directories:
 
 ```bash
 sudo mkdir -p /var/run/celery /var/log/celery
 sudo chown www-data:www-data /var/run/celery /var/log/celery
 ```
 
-### 7. Запуск сервисов
+### 7. Start the services
 
 ```bash
 sudo systemctl daemon-reload
@@ -176,16 +178,16 @@ sudo systemctl start seller-ai
 sudo systemctl start seller-ai-celery
 ```
 
-## SSL сертификат (Let's Encrypt)
+## SSL certificate (Let's Encrypt)
 
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
-## Мониторинг
+## Monitoring
 
-### Проверка статуса
+### Service status
 
 ```bash
 sudo systemctl status seller-ai
@@ -195,44 +197,44 @@ sudo systemctl status postgresql
 sudo systemctl status redis
 ```
 
-### Логи
+### Logs
 
 ```bash
-# Django логи
+# Celery worker logs
 tail -f /var/log/celery/worker1.log
 
-# Nginx логи
+# Nginx logs
 tail -f /var/log/nginx/access.log
 tail -f /var/log/nginx/error.log
 
-# Systemd логи
+# Systemd logs
 journalctl -u seller-ai -f
 journalctl -u seller-ai-celery -f
 ```
 
 ## Backup
 
-### База данных
+### Database
 
 ```bash
-# Создание бэкапа
+# Create a backup
 pg_dump -U sellerai_user -h localhost seller-ai > backup_$(date +%Y%m%d_%H%M%S).sql
 
-# Восстановление
+# Restore
 psql -U sellerai_user -h localhost seller-ai < backup_file.sql
 ```
 
-### Файлы
+### Files
 
 ```bash
-# Создание архива
+# Create an archive
 tar -czf seller-ai_backup_$(date +%Y%m%d_%H%M%S).tar.gz /var/www/seller-ai/
 
-# Исключая виртуальное окружение
+# Without the virtual environment
 tar --exclude='venv' -czf seller-ai_backup_$(date +%Y%m%d_%H%M%S).tar.gz /var/www/seller-ai/
 ```
 
-## Обновление
+## Updating
 
 ```bash
 cd /var/www/seller-ai/seller-ai
@@ -243,4 +245,4 @@ python manage.py migrate
 python manage.py collectstatic --noinput
 sudo systemctl restart seller-ai
 sudo systemctl restart seller-ai-celery
-``` 
+```
