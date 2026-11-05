@@ -40,7 +40,7 @@ langchain-community==0.3.24
 langchain-core==0.3.59
 langchain-openai==0.3.16
 langchain-text-splitters==0.3.8
-langsmith==0.3.42
+langsmith==0.8.18
 marshmallow==3.26.1
 multidict==6.4.3
 mypy_extensions==1.1.0
