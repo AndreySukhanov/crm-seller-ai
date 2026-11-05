@@ -10,7 +10,7 @@ dependencies = [
     "django==5.2",
     "django-celery-beat>=2.8.0",
     "django-cors-headers>=4.7.0",
-    "djangorestframework==3.16.0",
+    "djangorestframework==3.17.2",
     "dotenv==0.9.9",
     "faiss-cpu>=1.11.0",
     "langchain>=0.3.25",
