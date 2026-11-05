@@ -198,4 +198,6 @@ See [`DEPLOYMENT.md`](DEPLOYMENT.md) (Gunicorn + Nginx + systemd, PostgreSQL bac
 
 ## License
 
-[Source-Available](LICENSE). Reading, studying and learning from the code - yes; using it in products or services without written permission - no. Licensing questions: `avsukhanov21@gmail.com`.
+**Source-Available** — free to read, run and learn from. Commercial or derivative use requires written permission. See [LICENSE](LICENSE).
+
+Licensing contact: [avsukhanov21@gmail.com](mailto:avsukhanov21@gmail.com)
